@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routes import base,data,nlp
+from src.routes import base,data,nlp
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi.middleware.cors import CORSMiddleware 
 from src.helpers.config import get_settings
