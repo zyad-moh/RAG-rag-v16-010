@@ -11,4 +11,4 @@ services:
       - key: PYTHON_VERSION
         value: 3.10.0
       - key: DATABASE_URL
-        
+        value: "mongodb+srv://rag-app:admin@cluster0.ekluysq.mongodb.net/?appName=Cluster0"
