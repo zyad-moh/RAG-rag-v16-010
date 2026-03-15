@@ -2,10 +2,10 @@ from fastapi import FastAPI
 from .routes import base,data,nlp
 from motor.motor_asyncio import AsyncIOMotorClient
 from fastapi.middleware.cors import CORSMiddleware 
-from .helpers.config import get_settings
-from .stores.llm.LLMProviderFactory import LLMProviderFactory
-from .stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
-from .stores.llm.templates.template_parser import TemplateParser
+from src.helpers.config import get_settings
+from src.stores.llm.LLMProviderFactory import LLMProviderFactory
+from src.stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
+from src.stores.llm.templates.template_parser import TemplateParser
 app=FastAPI()
 app.add_middleware(
     CORSMiddleware,
