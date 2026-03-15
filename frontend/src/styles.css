@@ -1,0 +1,139 @@
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: #f7f7f7;
+  padding: 20px;
+  box-shadow: 1px 0 3px rgba(0,0,0,0.1);
+}
+
+.sidebar h2 {
+  margin-top: 0;
+}
+
+.sidebar nav a {
+  display: block;
+  margin: 10px 0;
+  text-decoration: none;
+  color: #333;
+}
+
+.sidebar nav a.active {
+  font-weight: bold;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* CV Analyzer styles */
+.cv-page .page-title {
+  margin: 0 0 6px 0;
+  font-size: 28px;
+}
+.cv-page .page-subtitle {
+  margin: 0 0 20px 0;
+  color: #666;
+}
+.cv-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 24px;
+}
+.upload-card, .result-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(16,24,40,0.04);
+  min-height: 320px;
+}
+.upload-card h3 {
+  margin-top: 0;
+}
+.upload-dropzone {
+  margin: 16px 0;
+  border: 2px dashed #e6e6ee;
+  border-radius: 8px;
+  padding: 28px;
+  text-align: center;
+  color: #9aa0ad;
+  position: relative;
+  cursor: pointer;
+}
+.upload-dropzone.has-file {
+  border-style: solid;
+}
+.upload-dropzone .file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.upload-empty svg {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+}
+.analyze-btn {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 12px;
+  background: #2f80ed;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.analyze-btn:disabled {
+  background: #cfe3ff;
+  cursor: not-allowed;
+}
+.upload-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.file-info strong { display:block; }
+.file-info span { color:#888; font-size:13px }
+.remove-btn {
+  background: transparent;
+  border: 1px solid #e6e6ee;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.result-card .no-resume {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #7a7f87;
+}
+.result-card .no-resume svg {
+  width: 72px;
+  height: 72px;
+  margin-bottom: 12px;
+}
+.result-card .no-resume h3 {
+  margin: 8px 0 4px 0;
+}
+.analysis-result {
+  padding: 8px;
+}
