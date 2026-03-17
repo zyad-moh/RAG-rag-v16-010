@@ -100,7 +100,7 @@ async def procces_endpoint(request:Request,project_id:str , Proccess_Request: Pr
          )
       project_file_ids = {asset_record.id:asset_record.asset_name}#asset_name for apply process of chunking amd id for show recourse
    else:
-      project_files=await asset_model.get_all_project_assets(asset_project_id=project.id,asset_type=AssetTypeEnum.FILE.value,) # note when create asset we use the mongodb id(the id made for each project_id) not the request id
+      project_files=await asset_model.get_last_asset_name(asset_project_id=project.id,asset_type=AssetTypeEnum.FILE.value,) # note when create asset we use the mongodb id(the id made for each project_id) not the request id
       project_file_ids={record.id:record.asset_name for record in project_files}# from asset collection store only the file_id(asset_name)and asset id of the spacified project.id,asset_type note project.id,asset_type contain many files
    # we used .asset_name instade of["asset_name"] as now record is pydantic model 
    if len(project_file_ids) == 0: 

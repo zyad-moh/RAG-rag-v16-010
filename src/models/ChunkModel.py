@@ -34,6 +34,39 @@ class ChunkModel(BaseDataModel):
             return None
         return DataChunk(**result)
     # if i insert chunk step by step it is not memory effeiciant sol batch write i pass data in form of batches 
+    
+    async def update_chunk_skills(self,chunk_asset_id:str,skills:list):#
+        result=await self.collection.update_one({
+            "chunk_asset_id":ObjectId(chunk_asset_id)
+        },
+        {
+            "$set":{"skills":skills}
+        }
+        )
+        if result is None:
+            return None
+        
+    async def update_chunk_gap_skills(self,chunk_asset_id:str,gap_skills:list):#
+        result=await self.collection.update_one({
+            "chunk_asset_id":ObjectId(chunk_asset_id)
+        },
+        {
+            "$set":{"gap_skills":gap_skills}
+        }
+        )
+        if result is None:
+            return None
+
+    async def update_chunk_learning_recommendtion(self,chunk_asset_id:str,learning_recommendtion:list):#
+        result=await self.collection.update_one({
+            "chunk_asset_id":ObjectId(chunk_asset_id)
+        },
+        {
+            "$set":{"learning_recommendtion":learning_recommendtion}
+        }
+        )
+        if result is None:
+            return None
     async def insert_many_chunks(self,chunks:list,batch_size:int=100):
        for i in range(0,len(chunks),batch_size):
           batch=chunks[i:i+batch_size]# at each itire batch contain diff chunks with size 100 

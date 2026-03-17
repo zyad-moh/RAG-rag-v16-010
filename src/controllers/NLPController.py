@@ -168,10 +168,16 @@ class NLPController(BaseController):
         return answer , full_prompt , chat_history
     def skill_gap_system(self,request:Request,query:str,user_skill,role:str="AI engineer"):
         answer , full_prompt , chat_history = None , None , None
-        prompt_1 = f"""
+        prompt_1 = f""" 
+
                         List only the required skills for the role: {role}.
                         Do not include any descriptions, examples, or extra text.
                         Return the result strictly as a Python list of strings.
+                        - only return the names of skills in list no any description just the name
+                        Rules:
+                        - Each skill must be a single, standalone string.
+                        - No explanations.
+                        - No markdown.
                         """
         system_prompt = self.template_parser.get("rag","system_prompt")
         chat_history_1 = [self.generation_client.construct_prompt(
@@ -233,7 +239,7 @@ class NLPController(BaseController):
         return result
     
 
-
+    
     def learning_recommendtion(self,request:Request,user_gap_skill,role:str="AI engineer"):
         prompt_3 = textwrap.dedent(f"""
         You are a Skill Gap Learning Advisor.

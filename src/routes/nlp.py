@@ -10,6 +10,7 @@ from models.ProjectModel import ProjectModel
 from models.ChunkModel import ChunkModel
 import json 
 from typing import List
+from models.enums.AssetTypeEnum import AssetTypeEnum
 
 
 logger = logging.getLogger('uvicorn.error')
@@ -18,7 +19,7 @@ nlp_router=APIRouter(
     prefix="/api/v1/nlp",
     tags=["api_v1"]
 )
-@nlp_router.post("/index/push/{project_id}")
+"""@nlp_router.post("/index/push/{project_id}")
 async def index_project(request:Request,project_id:str,PushRequest:PushRequest):
     # we need the project which contain the project_id 
     project_model = await ProjectModel.create_instance(# object from ProjectModel
@@ -77,9 +78,9 @@ async def index_project(request:Request,project_id:str,PushRequest:PushRequest):
             "inserted_items_count" : inserted_items_count
             
             })
+"""
 
-
-@nlp_router.get("/index/info/{project_id}")
+"""@nlp_router.get("/index/info/{project_id}")
 async def get_project_index_info(request:Request,project_id:str):
     nlp_controller = NLPController(
         vectordb_client = request.app.vectordb_client,
@@ -102,8 +103,8 @@ async def get_project_index_info(request:Request,project_id:str):
             "collection_info" : collection_info
             
             })
-
-@nlp_router.post("/index/search/{project_id}")
+"""
+"""@nlp_router.post("/index/search/{project_id}")
 async def search_index(request:Request,project_id:str,search_request:SearchRequest):# here i apply semantic search betwean the query (after get it's embedding) and the chunks in vector db
     nlp_controller = NLPController(
         vectordb_client = request.app.vectordb_client,
@@ -136,7 +137,7 @@ async def search_index(request:Request,project_id:str,search_request:SearchReque
             "results" : [res.dict() for res in results]
             
             })
-
+"""
 
 @nlp_router.post("/index/answer/{project_id}")
 async def answer_rag(request:Request,project_id:str):# here i apply semantic search betwean the query (after get it's embedding) and the chunks in vector db
@@ -156,7 +157,11 @@ async def answer_rag(request:Request,project_id:str):# here i apply semantic sea
     )
     asset_model=await AssetModel.create_instance(
         db_client=request.app.db_client)
-    asset_record=await asset_model.get_asset_record(asset_project_id=project.id,asset_name="745rg4ftwmez_cv_test.txt")
+    project_file_ids={}
+    project_files=await asset_model.get_last_asset_name(asset_project_id=project.id,asset_type=AssetTypeEnum.FILE.value,)
+    project_file_ids={record.id:record.asset_name for record in project_files}
+    asset_id,file_id = list(project_file_ids.items())[0]
+    asset_record=await asset_model.get_asset_record(asset_project_id=project.id,asset_name=file_id)
 
     chunk_model=ChunkModel(db_client=request.app.db_client)
     chunk_data = await chunk_model.get_chunk(asset_record.id)
@@ -168,7 +173,7 @@ async def answer_rag(request:Request,project_id:str):# here i apply semantic sea
         
     )
     s1 = json.loads(answer)
-
+    _ = await chunk_model.update_chunk_skills(asset_record.id,s1["skills"])
     request.app.state.skills = s1["skills"]
     if not answer :
         return JSONResponse(
@@ -185,9 +190,36 @@ async def answer_rag(request:Request,project_id:str):# here i apply semantic sea
             "chat_history" : chat_history
         
         })
-
+@nlp_router.get("/index/retun_skills/{project_id}")
+async def retun_skills(request:Request,project_id:str):
+    nlp_controller = NLPController(
+        vectordb_client = request.app.vectordb_client,
+        generation_client = request.app.generation_client,
+        embedding_client = request.app.embedding_client,
+        template_parser = request.app.template_parser,
+    )
+    project_model = await ProjectModel.create_instance(# object from ProjectModel
+        db_client=request.app.db_client
+    )
+    
+    project = await project_model.get_project_or_create_one(
+            project_id=project_id # function  from object
+    )
+    asset_model=await AssetModel.create_instance(
+        db_client=request.app.db_client)
+    project_file_ids={}
+    project_files=await asset_model.get_last_asset_name(asset_project_id=project.id,asset_type=AssetTypeEnum.FILE.value,)
+    project_file_ids={record.id:record.asset_name for record in project_files}
+    asset_id,file_id = list(project_file_ids.items())[0]
+    asset_record=await asset_model.get_asset_record(asset_project_id=project.id,asset_name=file_id)
+    chunk_model=ChunkModel(db_client=request.app.db_client)
+    chunk_data = await chunk_model.get_chunk(asset_record.id)
+    
+    clean_skills = nlp_controller.split_commas(nlp_controller.extract_skills(chunk_data.skills))
+    
+    return clean_skills
 @nlp_router.post("/index/skill_gap/{project_id}")
-async def skill(request:Request,user_skill:SkillRequest):
+async def skill(request:Request,project_id:str,user_skill:SkillRequest):
     nlp_controller = NLPController(
         vectordb_client = request.app.vectordb_client,
         generation_client = request.app.generation_client,
@@ -201,6 +233,27 @@ async def skill(request:Request,user_skill:SkillRequest):
         user_skill=user_skill.user_skill,
         role="AI engineer"
     )
+
+
+    project_model = await ProjectModel.create_instance(# object from ProjectModel
+        db_client=request.app.db_client
+    )
+    
+    project = await project_model.get_project_or_create_one(
+            project_id=project_id # function  from object
+    )
+    asset_model=await AssetModel.create_instance(
+        db_client=request.app.db_client)
+    project_file_ids={}
+    project_files=await asset_model.get_last_asset_name(asset_project_id=project.id,asset_type=AssetTypeEnum.FILE.value,)
+    project_file_ids={record.id:record.asset_name for record in project_files}
+    asset_id,file_id = list(project_file_ids.items())[0]
+    asset_record=await asset_model.get_asset_record(asset_project_id=project.id,asset_name=file_id)
+    
+    chunk_model=ChunkModel(db_client=request.app.db_client)
+    _ = await chunk_model.update_chunk_gap_skills(asset_record.id,list(answer))
+
+
 
     if not answer :
         return JSONResponse(
@@ -218,10 +271,37 @@ async def skill(request:Request,user_skill:SkillRequest):
             "skills":mnmn
         })
 
-
+@nlp_router.get("/index/retun_gap_skills/{project_id}")
+async def retun_gap_skills(request:Request,project_id:str):
+    nlp_controller = NLPController(
+        vectordb_client = request.app.vectordb_client,
+        generation_client = request.app.generation_client,
+        embedding_client = request.app.embedding_client,
+        template_parser = request.app.template_parser,
+    )
+    project_model = await ProjectModel.create_instance(# object from ProjectModel
+        db_client=request.app.db_client
+    )
+    
+    project = await project_model.get_project_or_create_one(
+            project_id=project_id # function  from object
+    )
+    asset_model=await AssetModel.create_instance(
+        db_client=request.app.db_client)
+    project_file_ids={}
+    project_files=await asset_model.get_last_asset_name(asset_project_id=project.id,asset_type=AssetTypeEnum.FILE.value,)
+    project_file_ids={record.id:record.asset_name for record in project_files}
+    asset_id,file_id = list(project_file_ids.items())[0]
+    asset_record=await asset_model.get_asset_record(asset_project_id=project.id,asset_name=file_id)
+    chunk_model=ChunkModel(db_client=request.app.db_client)
+    chunk_data = await chunk_model.get_chunk(asset_record.id)
+    
+    clean_skills = nlp_controller.split_commas(nlp_controller.extract_skills(chunk_data.gap_skills))
+    
+    return clean_skills
 
 @nlp_router.post("/index/learning_recommendtion/{project_id}")
-async def learning_recommendtion(request:Request,user_gap_skill:Skill_gap_Request):
+async def learning_recommendtion(request:Request,project_id:str,user_gap_skill:Skill_gap_Request):
     nlp_controller = NLPController(
         vectordb_client = request.app.vectordb_client,
         generation_client = request.app.generation_client,
@@ -234,6 +314,28 @@ async def learning_recommendtion(request:Request,user_gap_skill:Skill_gap_Reques
         user_gap_skill=user_gap_skill.user_gap_skill,
         role="AI engineer"
     )
+    
+
+    project_model = await ProjectModel.create_instance(# object from ProjectModel
+        db_client=request.app.db_client
+    )
+    
+    project = await project_model.get_project_or_create_one(
+            project_id=project_id # function  from object
+    )
+    asset_model=await AssetModel.create_instance(
+        db_client=request.app.db_client)
+    project_file_ids={}
+    project_files=await asset_model.get_last_asset_name(asset_project_id=project.id,asset_type=AssetTypeEnum.FILE.value,)
+    project_file_ids={record.id:record.asset_name for record in project_files}
+    asset_id,file_id = list(project_file_ids.items())[0]
+    asset_record=await asset_model.get_asset_record(asset_project_id=project.id,asset_name=file_id)
+    
+    chunk_model=ChunkModel(db_client=request.app.db_client)
+    _ = await chunk_model.update_chunk_learning_recommendtion(asset_record.id,answer)
+
+
+
 
     if not answer :
         return JSONResponse(
@@ -248,3 +350,25 @@ async def learning_recommendtion(request:Request,user_gap_skill:Skill_gap_Reques
             "answer" : (answer),
             
         })
+
+
+@nlp_router.get("/index/retun_learning_recommendtion/{project_id}")
+async def retun_learning_recommendtion(request:Request,project_id:str):
+    project_model = await ProjectModel.create_instance(# object from ProjectModel
+        db_client=request.app.db_client
+    )
+    
+    project = await project_model.get_project_or_create_one(
+            project_id=project_id # function  from object
+    )
+    asset_model=await AssetModel.create_instance(
+        db_client=request.app.db_client)
+    project_file_ids={}
+    project_files=await asset_model.get_last_asset_name(asset_project_id=project.id,asset_type=AssetTypeEnum.FILE.value,)
+    project_file_ids={record.id:record.asset_name for record in project_files}
+    asset_id,file_id = list(project_file_ids.items())[0]
+    asset_record=await asset_model.get_asset_record(asset_project_id=project.id,asset_name=file_id)
+    chunk_model=ChunkModel(db_client=request.app.db_client)
+    chunk_data = await chunk_model.get_chunk(asset_record.id)
+    
+    return chunk_data.learning_recommendtion

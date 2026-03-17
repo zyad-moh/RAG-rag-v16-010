@@ -2,7 +2,8 @@ from enum import Enum
 
 class LLMEnums (Enum) :
     OPENAI = "OPENAI"
-    COHERE = "COHERE" 
+    COHERE = "COHERE"
+    GROQ = "GROQ" 
 
 class OpenAIEnums(Enum):
     SYSTEM = "system"
