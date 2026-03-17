@@ -372,3 +372,6 @@ async def retun_learning_recommendtion(request:Request,project_id:str):
     chunk_data = await chunk_model.get_chunk(asset_record.id)
     
     return chunk_data.learning_recommendtion
+
+
+
