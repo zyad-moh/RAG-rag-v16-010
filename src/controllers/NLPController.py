@@ -292,3 +292,111 @@ class NLPController(BaseController):
             chat_history = chat_history_1
         )
         return response_learning_recommendtion
+
+    def ats_score(self,asset_record,jd_text=None):
+        prompt =f"""
+        You are an advanced ATS resume analysis engine.
+
+        Tasks:
+        1. Infer the professional domain of the resume.
+        2. Extract and categorize keywords into:
+        - Hard Skills
+        - Soft Skills
+        - Tools & Platforms
+        - Domain-Specific Terms
+        3. Count keyword frequency.
+        4. Identify missing common keywords for the detected domain.
+        5. Analyze readability and content quality.
+        6. Detect red flags and weaknesses.
+        7. Provide prioritized improvement recommendations.
+        8. Compute an Overall ATS Score (0-100).
+        """
+
+        if jd_text != None:
+            prompt += """
+        9. Analyze compatibility between the resume and the provided Job Description.
+        10. Compute a CV–JD Match Score (0-100).
+        11. Identify matched skills and missing job-required skills.
+        """
+
+        prompt += """
+        Return ONLY one strictly valid JSON object.
+        No explanations, no markdown, no code fences.
+
+        JSON Schema:
+
+        {
+        "overall_ats_score": 0,
+        "detected_domain": "string",
+        "keywords_analysis": {
+            "hard_skills": {},
+            "soft_skills": {},
+            "tools_and_platforms": {},
+            "domain_terms": {}
+        },
+        "missing_common_keywords": [],
+        "readability_and_content_quality": {
+            "avg_sentence_length": 0,
+            "reading_grade_level": 0,
+            "skill_density_percent": 0,
+            "quantification_percent": 0
+        },
+        "overused_buzzwords": [],
+        "weak_action_phrases": [],
+        "red_flags": [],
+        """
+
+        if jd_text:
+            prompt += """
+        "job_match_analysis": {
+            "cv_jd_match_score": 0,
+            "matched_skills": [],
+            "missing_job_skills": []
+        },
+        """
+
+        prompt += """
+        "priority_recommendations": [
+            {
+            "priority": 1,
+            "title": "string",
+            "reason": "string",
+            "actions": ["string"]
+            }
+        ]
+        }
+
+        Resume Text:
+        """ + asset_record
+
+        if jd_text:
+            prompt += """
+
+        Job Description Text:
+        """ + jd_text
+        system_prompt = self.template_parser.get("rag","system_prompt")
+        chat_history_1 = [self.generation_client.construct_prompt(
+            prompt = system_prompt,
+            role = self.generation_client.enums.SYSTEM.value # instate fo writing coher or open ai enum and i don't know which one is used 
+            )]
+        
+        footer_prompt_1 = self.template_parser.get("rag","footer_prompt", {
+                    "query":prompt,
+                   
+            })
+        #skills = request.app.state.skills
+        #print(skills)
+        ats_response = self.generation_client.generate_text(
+            prompt = footer_prompt_1,# footer_prompt it was full_prompt
+            chat_history = chat_history_1
+        )
+        ats_response=self.parse_llm_json(ats_response)
+
+        return ats_response["overall_ats_score"] , ats_response["priority_recommendations"]
+
+
+    def parse_llm_json(self,response):
+        json_match = re.search(r'\{.*\}', response, re.DOTALL)
+        if not json_match:
+            raise ValueError("No valid JSON found in model output")
+        return json.loads(json_match.group())

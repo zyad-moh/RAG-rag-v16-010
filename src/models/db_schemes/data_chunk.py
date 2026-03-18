@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, validator
-from typing import Optional,List
+from typing import Optional,List,Dict,Any
 from bson.objectid import ObjectId
 
 class DataChunk(BaseModel):
@@ -9,6 +9,8 @@ class DataChunk(BaseModel):
     skills:List[str]=None
     gap_skills:List[str]=None
     learning_recommendtion:str=None
+    ats_score:int = None
+    answer_recommendetions : List[Dict[str, Any]] = None
     chunk_order: int = Field(..., gt=0)
     chunk_project_id: ObjectId
     chunk_asset_id: ObjectId

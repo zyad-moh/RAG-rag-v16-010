@@ -375,3 +375,70 @@ async def retun_learning_recommendtion(request:Request,project_id:str):
 
 
 
+@nlp_router.post("/index/ats_score/{project_id}")
+async def ats_score(request:Request,project_id:str):# here i apply semantic search betwean the query (after get it's embedding) and the chunks in vector db
+    nlp_controller = NLPController(
+        vectordb_client = request.app.vectordb_client,
+        generation_client = request.app.generation_client,
+        embedding_client = request.app.embedding_client,
+        template_parser = request.app.template_parser,
+    )
+   
+    project_model = await ProjectModel.create_instance(# object from ProjectModel
+        db_client=request.app.db_client
+    )
+    
+    project = await project_model.get_project_or_create_one(
+            project_id=project_id # function  from object
+    )
+    asset_model=await AssetModel.create_instance(
+        db_client=request.app.db_client)
+    project_file_ids={}
+    project_files=await asset_model.get_last_asset_name(asset_project_id=project.id,asset_type=AssetTypeEnum.FILE.value,)
+    project_file_ids={record.id:record.asset_name for record in project_files}
+    asset_id,file_id = list(project_file_ids.items())[0]
+    asset_record=await asset_model.get_asset_record(asset_project_id=project.id,asset_name=file_id)
+
+    chunk_model=ChunkModel(db_client=request.app.db_client)
+    chunk_data = await chunk_model.get_chunk(asset_record.id)
+    answer_score,answer_recommendetions = nlp_controller.ats_score(
+        asset_record = chunk_data.chunk_text,     
+    )
+    _ = await chunk_model.update_chunk_ats(asset_record.id,answer_score,answer_recommendetions)
+
+    if not answer_score  :
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+            "signal": ResponseSignal.RAG_ANSWER_ERROR.value
+                }
+        )
+    return JSONResponse(# need dict or list of
+        content={
+            "signal": ResponseSignal.RAG_ANSWER_SUCCESS.value,
+            "answer_score" : answer_score,
+            "answer_recommendetions" :answer_recommendetions
+        
+        })
+
+
+@nlp_router.get("/index/retun_ats_score_recommendtion/{project_id}")
+async def retun_ats_score_recommendtion(request:Request,project_id:str):
+    project_model = await ProjectModel.create_instance(# object from ProjectModel
+        db_client=request.app.db_client
+    )
+    
+    project = await project_model.get_project_or_create_one(
+            project_id=project_id # function  from object
+    )
+    asset_model=await AssetModel.create_instance(
+        db_client=request.app.db_client)
+    project_file_ids={}
+    project_files=await asset_model.get_last_asset_name(asset_project_id=project.id,asset_type=AssetTypeEnum.FILE.value,)
+    project_file_ids={record.id:record.asset_name for record in project_files}
+    asset_id,file_id = list(project_file_ids.items())[0]
+    asset_record=await asset_model.get_asset_record(asset_project_id=project.id,asset_name=file_id)
+    chunk_model=ChunkModel(db_client=request.app.db_client)
+    chunk_data = await chunk_model.get_chunk(asset_record.id)
+    
+    return chunk_data.ats_score , chunk_data.answer_recommendetions

@@ -67,6 +67,20 @@ class ChunkModel(BaseDataModel):
         )
         if result is None:
             return None
+
+    async def update_chunk_ats(self,chunk_asset_id:str,answer_score,answer_recommendetions):#
+        result=await self.collection.update_one({
+            "chunk_asset_id":ObjectId(chunk_asset_id)
+        },
+        {
+            "$set":{"ats_score":answer_score,
+                    "answer_recommendetions":answer_recommendetions
+            }
+        }
+        )
+        if result is None:
+            return None
+    
     async def insert_many_chunks(self,chunks:list,batch_size:int=100):
        for i in range(0,len(chunks),batch_size):
           batch=chunks[i:i+batch_size]# at each itire batch contain diff chunks with size 100 
