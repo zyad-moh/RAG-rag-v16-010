@@ -395,8 +395,28 @@ class NLPController(BaseController):
         return ats_response["overall_ats_score"] , ats_response["priority_recommendations"]
 
 
-    def parse_llm_json(self,response):
+    '''def parse_llm_json(self,response):
         json_match = re.search(r'\{.*\}', response, re.DOTALL)
         if not json_match:
             raise ValueError("No valid JSON found in model output")
-        return json.loads(json_match.group())
+        return json.loads(json_match.group())'''
+    def parse_llm_json(self,response: str):
+        # remove markdown
+        response = response.replace("```json", "").replace("```", "").strip()
+
+        # try direct parse first
+        try:
+            return json.loads(response)
+        except:
+            pass
+
+        # fallback: extract first valid JSON object
+        matches = re.finditer(r'\{.*?\}', response, re.DOTALL)
+
+        for match in matches:
+            try:
+                return json.loads(match.group())
+            except:
+                continue
+
+        raise ValueError("No valid JSON found in model output")
