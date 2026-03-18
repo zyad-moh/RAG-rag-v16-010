@@ -16,7 +16,7 @@ class settings(BaseSettings):
     OPENAI_API_KEY: str = None
     OPENAI_API_URL: str = None
     COHERE_API_KEY: str = None
-    GROQ_API_KEY: str = None
+    
 
     GENERATION_MODEL_ID: str = None
     EMBEDDING_MODEL_ID: str = None
@@ -30,7 +30,7 @@ class settings(BaseSettings):
     VECTOR_DB_DISTANCE_METHOD : str = None
     PRIMARY_LANG: str = "en"
     DEFAULT_LANG : str = "en"
-    
+    GROQ_API_KEY: str = None
     
     class Config():# path of .env, any thing in ".env" will be loaded and i will able to use it(data configration for validation)
         env_file=".env"
